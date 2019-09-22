@@ -24,7 +24,8 @@ NUM_FEATURES = 7
 learning_rate = 0.001
 batch_size = 8
 weight_decay = 0.001
-epochs = 200
+# num_neuron = 30
+epochs = 100
 
 
 #read training data
@@ -41,7 +42,9 @@ Y_test = Y_test.reshape(Y_test.shape[0], 1)
 X_train = (X_train- np.mean(X_train, axis=0))/ np.std(X_train, axis=0)
 X_test = (X_test- np.mean(X_test, axis=0))/ np.std(X_test, axis=0)
 
-print(X_train.shape)
+#reduce features
+reduced6X_train = np.delete(X_train, obj= -1, axis=1)
+reduced6X_test = np.delete(X_test, obj= -1, axis=1)
 
 # Create the model
 model = tf.keras.Sequential()
@@ -49,7 +52,7 @@ model = tf.keras.Sequential()
 model.add(
     Dense(
         units = 10,                 #number of neurons
-        input_shape= (NUM_FEATURES,),
+        input_shape= (NUM_FEATURES-1,),
         use_bias=True,
         activation='relu',
         kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
@@ -72,15 +75,17 @@ model.compile(optimizer=optimizer,
               loss='mse',       # mean squared error
               metrics=['mse'])  
 
-history = model.fit(X_train, Y_train, 
+history = model.fit(reduced6X_train, Y_train, 
     batch_size=batch_size,
     epochs=epochs,
-    validation_data = (X_test, Y_test),
+    validation_data = (reduced6X_test, Y_test),
     shuffle=True
 )
 
-print(model.layers[0].get_weights())
+model.save("models/3layers6features.h5")
 
+
+    
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
 plt.title('model loss')
@@ -88,5 +93,55 @@ plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 
-plt.savefig('figures/q1a.png')
+#reduce features
+reduced5X_train = np.delete(reduced6X_train, obj= 2, axis=1)
+reduced5X_test = np.delete(reduced6X_test, obj= 2, axis=1)
+
+# Create the model
+model = tf.keras.Sequential()
+#hidden layer 1
+model.add(
+    Dense(
+        units = 10,                 #number of neurons
+        input_shape= (NUM_FEATURES-2,),
+        use_bias=True,
+        activation='relu',
+        kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
+    ))
+#output layer
+model.add(
+    Dense(
+        units = 1,
+        use_bias=True,
+        activation='linear',
+        kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
+
+    ))
+
+#Create the gradient descent optimizer with the given learning rate.
+optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+
+# Configure a model for mean-squared error regression.
+model.compile(optimizer=optimizer,
+              loss='mse',       # mean squared error
+              metrics=['mse'])  
+
+history = model.fit(reduced5X_train, Y_train, 
+    batch_size=batch_size,
+    epochs=epochs,
+    validation_data = (reduced5X_test, Y_test),
+    shuffle=True
+)
+
+model.save("models/3layers5features.h5")
+
+plt.figure(2)
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+
+# plt.savefig('figures/q3b.png')
 plt.show()

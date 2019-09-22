@@ -42,18 +42,13 @@ Y_test = Y_test.reshape(Y_test.shape[0], 1)
 X_train = (X_train- np.mean(X_train, axis=0))/ np.std(X_train, axis=0)
 X_test = (X_test- np.mean(X_test, axis=0))/ np.std(X_test, axis=0)
 
-print(X_train.shape)
-
 # Create the model
-x = tf.placeholder(tf.float32, shape = (NUM_FEATURES))
-d = tf.placeholder(tf.float32, shape = (1))
-
 model = tf.keras.Sequential()
 #hidden layer 1
 model.add(
     Dense(
         units = 10,                 #number of neurons
-        input_shape= x.shape,
+        input_shape= (NUM_FEATURES,),
         use_bias=True,
         activation='relu',
         kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
