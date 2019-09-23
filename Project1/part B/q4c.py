@@ -53,7 +53,7 @@ perf_list.append(mse)
 
 
 # load the model
-model = tf.keras.models.load_model('models/3layers6features.h5')
+model = tf.keras.models.load_model('models/4layers7features.h5')
 
 #Create the gradient descent optimizer with the given learning rate.
 optimizer = tf.train.GradientDescentOptimizer(learning_rate)
@@ -63,18 +63,16 @@ model.compile(optimizer=optimizer,
               loss='mse',       # mean squared error
               metrics=['mse']) 
        
-#reduce inputs
-reduced6X_test = np.delete(X_test, obj= -1, axis=1)
 
 #evaluate       
-loss, mse = model.evaluate(x=reduced6X_test, y=Y_test, batch_size=batch_size)
+loss, mse = model.evaluate(x=X_test, y=Y_test, batch_size=batch_size)
 
 perf_list.append(mse)
 
 
 
 # load the model
-model = tf.keras.models.load_model('models/3layers5features.h5')
+model = tf.keras.models.load_model('models/4layers7features_wDropouts.h5')
 
 #Create the gradient descent optimizer with the given learning rate.
 optimizer = tf.train.GradientDescentOptimizer(learning_rate)
@@ -84,25 +82,58 @@ model.compile(optimizer=optimizer,
               loss='mse',       # mean squared error
               metrics=['mse']) 
        
-#reduce inputs
-reduced5X_test = np.delete(reduced6X_test, obj= 2, axis=1)
 
 #evaluate       
-loss, mse = model.evaluate(x=reduced5X_test, y=Y_test, batch_size=batch_size)
+loss, mse = model.evaluate(x=X_test, y=Y_test, batch_size=batch_size)
 
 perf_list.append(mse)
 
+# load the model
+model = tf.keras.models.load_model('models/5layers7features.h5')
+
+#Create the gradient descent optimizer with the given learning rate.
+optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+
+# Configure a model for mean-squared error regression.
+model.compile(optimizer=optimizer,
+              loss='mse',       # mean squared error
+              metrics=['mse']) 
+       
+
+#evaluate       
+loss, mse = model.evaluate(x=X_test, y=Y_test, batch_size=batch_size)
+
+perf_list.append(mse)
+
+# load the model
+model = tf.keras.models.load_model('models/5layers7features_wDropouts.h5')
+
+#Create the gradient descent optimizer with the given learning rate.
+optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+
+# Configure a model for mean-squared error regression.
+model.compile(optimizer=optimizer,
+              loss='mse',       # mean squared error
+              metrics=['mse']) 
+       
+
+#evaluate       
+loss, mse = model.evaluate(x=X_test, y=Y_test, batch_size=batch_size)
+
+perf_list.append(mse)
  
 labels = [
-    "7",
-    "6",
+    "3",
+    "4",
+    "4 with dropouts",
     "5",
+    "5 with dropouts",
 ]
     
 plt.bar(labels, perf_list)
 plt.title('performance with reduced features')
 plt.ylabel('mse loss')
-plt.xlabel('features')
+plt.xlabel('layers')
 
-plt.savefig('figures/q3c.png')
+plt.savefig('figures/q4c.png')
 plt.show()

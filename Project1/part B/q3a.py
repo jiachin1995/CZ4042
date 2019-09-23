@@ -61,8 +61,6 @@ for i in range(NUM_FEATURES):
     loss, mse = model.evaluate(x=reduced_X_test, y=Y_test, batch_size=batch_size)
     perf_list.append(mse)
 
-print(perf_list)
-
     
 labels = [
     "all features",

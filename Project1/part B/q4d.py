@@ -10,7 +10,7 @@ tf.compat.v1.set_random_seed(seed)
 
 import pylab as plt
 
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Dropout
 
 
 
@@ -24,8 +24,10 @@ NUM_FEATURES = 7
 learning_rate = 0.001
 batch_size = 8
 weight_decay = 0.001
-num_neuron = 10
-epochs = 100
+num_neuron = 50
+epochs = 1000
+
+dropout_keep = 0.8
 
 
 #read training data
@@ -42,21 +44,28 @@ Y_test = Y_test.reshape(Y_test.shape[0], 1)
 X_train = (X_train- np.mean(X_train, axis=0))/ np.std(X_train, axis=0)
 X_test = (X_test- np.mean(X_test, axis=0))/ np.std(X_test, axis=0)
 
-#reduce features
-reduced6X_train = np.delete(X_train, obj= -1, axis=1)
-reduced6X_test = np.delete(X_test, obj= -1, axis=1)
 
-# Create the model
+# Create the 4-layer model
 model = tf.keras.Sequential()
 #hidden layer 1
 model.add(
     Dense(
         units = num_neuron,                 #number of neurons
-        input_shape= (NUM_FEATURES-1,),
+        input_shape= (NUM_FEATURES,),
         use_bias=True,
         activation='relu',
         kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
     ))
+model.add(Dropout(rate= 1-dropout_keep , seed=seed))
+#hidden layer 2
+model.add(
+    Dense(
+        units = num_neuron,                 #number of neurons
+        use_bias=True,
+        activation='relu',
+        kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
+    ))
+model.add(Dropout(rate= 1-dropout_keep , seed=seed))
 #output layer
 model.add(
     Dense(
@@ -75,14 +84,14 @@ model.compile(optimizer=optimizer,
               loss='mse',       # mean squared error
               metrics=['mse'])  
 
-history = model.fit(reduced6X_train, Y_train, 
+history = model.fit(X_train, Y_train, 
     batch_size=batch_size,
     epochs=epochs,
-    validation_data = (reduced6X_test, Y_test),
+    validation_data = (X_test, Y_test),
     shuffle=True
 )
 
-model.save("models/3layers6features.h5")
+model.save("models/4layers7features_wDropouts_1000epochs.h5")
 
 
     
@@ -93,21 +102,38 @@ plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 
-#reduce features
-reduced5X_train = np.delete(reduced6X_train, obj= 2, axis=1)
-reduced5X_test = np.delete(reduced6X_test, obj= 2, axis=1)
+plt.savefig('figures/q4d1.png')
 
-# Create the model
+# Create the 5-layer model
 model = tf.keras.Sequential()
 #hidden layer 1
 model.add(
     Dense(
         units = num_neuron,                 #number of neurons
-        input_shape= (NUM_FEATURES-2,),
+        input_shape= (NUM_FEATURES,),
         use_bias=True,
         activation='relu',
         kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
     ))
+model.add(Dropout(rate= 1-dropout_keep , seed=seed))
+#hidden layer 2
+model.add(
+    Dense(
+        units = num_neuron,                 #number of neurons
+        use_bias=True,
+        activation='relu',
+        kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
+    ))
+model.add(Dropout(rate= 1-dropout_keep , seed=seed))
+#hidden layer 3
+model.add(
+    Dense(
+        units = num_neuron,                 #number of neurons
+        use_bias=True,
+        activation='relu',
+        kernel_regularizer = tf.keras.regularizers.l2(weight_decay)    #weight regularizers
+    ))
+model.add(Dropout(rate= 1-dropout_keep , seed=seed))
 #output layer
 model.add(
     Dense(
@@ -126,14 +152,14 @@ model.compile(optimizer=optimizer,
               loss='mse',       # mean squared error
               metrics=['mse'])  
 
-history = model.fit(reduced5X_train, Y_train, 
+history = model.fit(X_train, Y_train, 
     batch_size=batch_size,
     epochs=epochs,
-    validation_data = (reduced5X_test, Y_test),
+    validation_data = (X_test, Y_test),
     shuffle=True
 )
 
-model.save("models/3layers5features.h5")
+model.save("models/5layers7features_wDropouts_1000epochs.h5")
 
 plt.figure(2)
 plt.plot(history.history['loss'])
@@ -143,5 +169,5 @@ plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 
-# plt.savefig('figures/q3b.png')
+plt.savefig('figures/q4d2.png')
 plt.show()

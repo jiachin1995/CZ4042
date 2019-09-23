@@ -24,7 +24,7 @@ NUM_FEATURES = 7
 learning_rate = 0.001
 batch_size = 8
 weight_decay = 0.001
-# num_neuron = 30
+num_neuron = 10
 epochs = 100
 
 
@@ -47,7 +47,7 @@ model = tf.keras.Sequential()
 #hidden layer 1
 model.add(
     Dense(
-        units = 10,                 #number of neurons
+        units = num_neuron,                 #number of neurons
         input_shape= (NUM_FEATURES,),
         use_bias=True,
         activation='relu',
