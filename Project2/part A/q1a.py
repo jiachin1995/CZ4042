@@ -39,6 +39,10 @@ def load_data(file):
     labels_ = np.zeros([labels.shape[0], NUM_CLASSES])
     labels_[np.arange(labels.shape[0]), labels-1] = 1
 
+
+    """Moved rescaling here"""
+    data = (data - 0)/255.
+
     return data, labels_
 
 
@@ -54,14 +58,29 @@ def cnn(images):
 
     conv_1 = tf.nn.relu(tf.nn.conv2d(images, W1, [1, 1, 1, 1], padding='VALID') + b1)
     pool_1 = tf.nn.max_pool(conv_1, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_1')
-
-    dim = pool_1.get_shape()[1].value * pool_1.get_shape()[2].value * pool_1.get_shape()[3].value 
-    pool_1_flat = tf.reshape(pool_1, [-1, dim])
 	
+    """add conv2 & 300 layer"""
+    #Conv 2
+    
+    W2 = tf.Variable(tf.truncated_normal([5, 5, 50, 60], stddev=1.0/np.sqrt(50*5*5)), name='weights_2')
+    b2 = tf.Variable(tf.zeros([60]), name='biases_2')
+
+    conv_2 = tf.nn.relu(tf.nn.conv2d(pool_1, W2, [1, 1, 1, 1], padding='VALID') + b2)
+    pool_2 = tf.nn.max_pool(conv_2, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_2')
+
+    #Flatten
+    dim = pool_2.get_shape()[1].value * pool_2.get_shape()[2].value * pool_2.get_shape()[3].value 
+    pool_2_flat = tf.reshape(pool_2, [-1, dim])
+    
+    #Fully connected 300 layer
+    W3 = tf.Variable(tf.truncated_normal([dim, 300], stddev=1.0/np.sqrt(dim)), name='weights_3')
+    b3 = tf.Variable(tf.zeros([300]), name='biases_3')
+    linear = tf.matmul(pool_2_flat, W3) + b3
+    
     #Softmax
-    W2 = tf.Variable(tf.truncated_normal([dim, NUM_CLASSES], stddev=1.0/np.sqrt(dim)), name='weights_3')
-    b2 = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases_3')
-    logits = tf.matmul(pool_1_flat, W2) + b2
+    W4 = tf.Variable(tf.truncated_normal([300, NUM_CLASSES], stddev=1.0/np.sqrt(300)), name='weights_4')
+    b4 = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases_4')
+    logits = tf.matmul(linear, W4) + b4
 
     return logits
 
@@ -74,7 +93,6 @@ def main():
     testX, testY = load_data('test_batch_trim')
     print(testX.shape, testY.shape)
 
-    trainX = (trainX - np.min(trainX, axis = 0))/np.max(trainX, axis = 0)
 
     # Create the model
     x = tf.placeholder(tf.float32, [None, IMG_SIZE*IMG_SIZE*NUM_CHANNELS])
@@ -83,6 +101,7 @@ def main():
     
     logits = cnn(x)
 
+    # Declare loss & accuracy
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
     loss = tf.reduce_mean(cross_entropy)
 
@@ -102,9 +121,14 @@ def main():
             np.random.shuffle(idx)
             trainX, trainY = trainX[idx], trainY[idx]
 
-            train_step.run(feed_dict={x: trainX, y_: trainY})
+            #apply mini batch
+            for j in range(len(trainX) // batch_size):
+                train_step.run(feed_dict={x: trainX[j*batch_size:(j+1)*batch_size], y_: trainY[j*batch_size:(j+1)*batch_size]})
+            
             train_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
             test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
+                
+            print('epoch', e, 'entropy', train_loss[-1])
             
         print(train_loss)
         print(test_acc)
@@ -122,9 +146,9 @@ def main():
     plt.figure(1)
     plt.plot(range(epochs), test_acc)
     plt.plot(range(epochs), train_loss)
-    plt.xlabel(str(epochs) + ' iterations')
+    plt.xlabel(str(epochs) + ' epochs')
     plt.ylabel('Test accuracy & Train loss')
-    plt.legend(['train', 'test'], loc='upper left')
+    plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
     plt.show()
     plt.savefig('figures/q1a.png')
