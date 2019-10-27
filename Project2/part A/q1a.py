@@ -14,7 +14,7 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 10
+epochs = 2000
 batch_size = 128
 
 
@@ -112,6 +112,10 @@ def main():
 
     N = len(trainX)
     idx = np.arange(N)
+    
+    #tensorflow saver
+    saver = tf.train.Saver()
+    
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         
@@ -128,10 +132,12 @@ def main():
             train_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
             test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
                 
-            print('epoch', e, 'entropy', train_loss[-1])
+            print('epoch', e, 'entropy', train_loss[-1], 'test acc', test_acc[-1])
             
         print(train_loss)
         print(test_acc)
+        
+        saver.save(sess, "/models/q1a.ckpt")
 
     ind = np.random.randint(low=0, high=10000)
     X = trainX[ind,:]
@@ -150,8 +156,9 @@ def main():
     plt.ylabel('Test accuracy & Train loss')
     plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
-    plt.show()
+    
     plt.savefig('figures/q1a.png')
+    plt.show()
 
 
 
