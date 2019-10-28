@@ -53,7 +53,7 @@ def cnn(images):
     images = tf.reshape(images, [-1, IMG_SIZE, IMG_SIZE, NUM_CHANNELS])
     
     #Conv 1
-    HIDDEN_C1_NEURONS = 50  #40,60
+    HIDDEN_C1_NEURONS = 60  #40,60
     W1 = tf.Variable(tf.truncated_normal([9, 9, NUM_CHANNELS, HIDDEN_C1_NEURONS], stddev=1.0/np.sqrt(NUM_CHANNELS*9*9)), name='weights_1')
     b1 = tf.Variable(tf.zeros([HIDDEN_C1_NEURONS]), name='biases_1')
 
@@ -62,7 +62,7 @@ def cnn(images):
 	
     """add conv2 & 300 layer"""
     #Conv 2
-    HIDDEN_C2_NEURONS = 60  #50,70
+    HIDDEN_C2_NEURONS = 70  #50,70
     W2 = tf.Variable(tf.truncated_normal([5, 5, HIDDEN_C1_NEURONS, HIDDEN_C2_NEURONS], stddev=1.0/np.sqrt(HIDDEN_C1_NEURONS*5*5)), name='weights_2')
     b2 = tf.Variable(tf.zeros([HIDDEN_C2_NEURONS]), name='biases_2')
 
@@ -106,7 +106,7 @@ def main():
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
     loss = tf.reduce_mean(cross_entropy)
 
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
+    train_step = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(loss)
 
     correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1)), tf.float32)
     accuracy = tf.reduce_mean(correct_prediction)
@@ -146,7 +146,7 @@ def main():
     plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
     
-    plt.savefig('figures/q2a.png')
+    plt.savefig('figures/q3c.png')
     plt.show()
 
 

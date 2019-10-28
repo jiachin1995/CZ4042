@@ -49,39 +49,45 @@ def load_data(file):
 
 
 def cnn(images):
-
+    drop_rate = 0.2
+    
     images = tf.reshape(images, [-1, IMG_SIZE, IMG_SIZE, NUM_CHANNELS])
     
     #Conv 1
-    HIDDEN_C1_NEURONS = 50  #40,60
+    HIDDEN_C1_NEURONS = 60  #40,60
     W1 = tf.Variable(tf.truncated_normal([9, 9, NUM_CHANNELS, HIDDEN_C1_NEURONS], stddev=1.0/np.sqrt(NUM_CHANNELS*9*9)), name='weights_1')
     b1 = tf.Variable(tf.zeros([HIDDEN_C1_NEURONS]), name='biases_1')
 
     conv_1 = tf.nn.relu(tf.nn.conv2d(images, W1, [1, 1, 1, 1], padding='VALID') + b1)
-    pool_1 = tf.nn.max_pool(conv_1, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_1')
-	
+    conv_1_dropout = tf.nn.dropout(conv_1, rate = drop_rate)
+    pool_1 = tf.nn.max_pool(conv_1_dropout, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_1')
+    pool_1_dropout = tf.nn.dropout(pool_1, rate = drop_rate)
+    
     """add conv2 & 300 layer"""
     #Conv 2
-    HIDDEN_C2_NEURONS = 60  #50,70
+    HIDDEN_C2_NEURONS = 70  #50,70
     W2 = tf.Variable(tf.truncated_normal([5, 5, HIDDEN_C1_NEURONS, HIDDEN_C2_NEURONS], stddev=1.0/np.sqrt(HIDDEN_C1_NEURONS*5*5)), name='weights_2')
     b2 = tf.Variable(tf.zeros([HIDDEN_C2_NEURONS]), name='biases_2')
 
-    conv_2 = tf.nn.relu(tf.nn.conv2d(pool_1, W2, [1, 1, 1, 1], padding='VALID') + b2)
-    pool_2 = tf.nn.max_pool(conv_2, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_2')
+    conv_2 = tf.nn.relu(tf.nn.conv2d(pool_1_dropout, W2, [1, 1, 1, 1], padding='VALID') + b2)
+    conv_2_dropout = tf.nn.dropout(conv_2, rate = drop_rate)
+    pool_2 = tf.nn.max_pool(conv_2_dropout, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_2')
+    pool_2_dropout = tf.nn.dropout(pool_2, rate = drop_rate)
 
     #Flatten
-    dim = pool_2.get_shape()[1].value * pool_2.get_shape()[2].value * pool_2.get_shape()[3].value 
-    pool_2_flat = tf.reshape(pool_2, [-1, dim])
+    dim = pool_2_dropout.get_shape()[1].value * pool_2_dropout.get_shape()[2].value * pool_2_dropout.get_shape()[3].value 
+    pool_2_flat = tf.reshape(pool_2_dropout, [-1, dim])
     
     #Fully connected 300 layer
     W3 = tf.Variable(tf.truncated_normal([dim, 300], stddev=1.0/np.sqrt(dim)), name='weights_3')
     b3 = tf.Variable(tf.zeros([300]), name='biases_3')
     linear = tf.matmul(pool_2_flat, W3) + b3
+    linear_dropout = tf.nn.dropout(linear, rate = drop_rate)
     
     #Softmax
     W4 = tf.Variable(tf.truncated_normal([300, NUM_CLASSES], stddev=1.0/np.sqrt(300)), name='weights_4')
     b4 = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases_4')
-    logits = tf.matmul(linear, W4) + b4
+    logits = tf.matmul(linear_dropout, W4) + b4
 
     return logits
 
@@ -146,7 +152,7 @@ def main():
     plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
     
-    plt.savefig('figures/q2a.png')
+    plt.savefig('figures/q3d.png')
     plt.show()
 
 
