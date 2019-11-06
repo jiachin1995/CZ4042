@@ -18,6 +18,12 @@ seed = 10
 tf.set_random_seed(seed)
 
 def char_cnn_model(x):
+  """ADD EMBEDDING LAYER"""
+  #tflearn.layers.embedding_ops.embedding
+  #inputs and outputs are int/not normalise
+  
+  """NEED to normalise embedding outputs"""
+  
   
   input_layer = tf.reshape(
       tf.one_hot(x, 256), [-1, MAX_DOCUMENT_LENGTH, 256, 1])
@@ -67,7 +73,8 @@ def read_data_chars():
   y_test = pandas.Series(y_test)
   
   
-  char_processor = tf.contrib.learn.preprocessing.ByteProcessor(MAX_DOCUMENT_LENGTH)
+  #changed char to vocab processor. approximately
+  char_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH)
   x_train = np.array(list(char_processor.fit_transform(x_train)))
   x_test = np.array(list(char_processor.transform(x_test)))
   y_train = y_train.values
@@ -79,7 +86,7 @@ def read_data_chars():
   print(x_train)
   print(np.amax(x_train))
   
-  """NEED to normalise x inputs"""
+  
   
   return x_train, y_train, x_test, y_test
 
