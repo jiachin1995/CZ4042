@@ -79,7 +79,7 @@ def read_data_chars():
   print(x_train)
   print(np.amax(x_train))
   
-  """NEED to normalise x inputs"""
+  """Note: No need to normalise x inputs. its one hot encoding"""
   
   return x_train, y_train, x_test, y_test
 
