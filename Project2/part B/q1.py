@@ -35,12 +35,27 @@ def char_cnn_model(x):
         strides=POOLING_STRIDE,
         padding='SAME')
 
+    print(pool1.shape)
+
     pool1 = tf.squeeze(tf.reduce_max(pool1, 1), squeeze_dims=[1])
 
-  """implement SOFTMAX LAYER, 15 CLASSES OUTPUT """
+    print(pool1.shape)
+
+    """^check shape"""
+    """Add cnn layer 2"""
+
+
+
+
+  """implement SOFTMAX LAYER, 15 CLASSES OUTPUT--- MAYBE NO NEED DO"""
 
 
   logits = tf.layers.dense(pool1, MAX_LABEL, activation=None)
+
+  print(logits)
+  print(logits.shape)
+  
+  return
 
   return input_layer, logits
 
