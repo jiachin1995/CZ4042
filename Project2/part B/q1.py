@@ -80,6 +80,7 @@ def read_data_chars():
   print(np.amax(x_train))
   
   """Note: No need to normalise x inputs. its one hot encoding"""
+
   
   return x_train, y_train, x_test, y_test
 
@@ -110,10 +111,16 @@ def main():
     """implement batch size of 128"""
     _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
     loss.append(loss_)
+    
+    """Record running times"""
 
 
     if e%1 == 0:
       print('iter: %d, entropy: %g'%(e, loss[e]))
+  
+  """Plot <training entropy cost> & <test accuracy> over epochs"""
+  
+  
   
   sess.close()
 
