@@ -20,6 +20,7 @@ seed = 10
 tf.set_random_seed(seed)
 
 def char_cnn_model(x):
+  drop_rate = 0.2
   
   input_layer = tf.reshape(
       tf.one_hot(x, 256), [-1, MAX_DOCUMENT_LENGTH, 256, 1])
@@ -32,11 +33,15 @@ def char_cnn_model(x):
         kernel_size=FILTER_SHAPE1,
         padding='VALID',
         activation=tf.nn.relu)
+    conv_1_dropout = tf.nn.dropout(conv1, rate = drop_rate)
     pool1 = tf.layers.max_pooling2d(
-        conv1,
+        conv_1_dropout,
         pool_size=POOLING_WINDOW,
         strides=POOLING_STRIDE,
         padding='SAME')
+
+    pool_1_dropout = tf.nn.dropout(pool1, rate = drop_rate)
+
 
     # print(input_layer.shape)     # (?,100,256,1)
     # print(conv1.shape)           # (?,81,1,10)
@@ -44,21 +49,24 @@ def char_cnn_model(x):
 
     #layer2
     conv2 = tf.layers.conv2d(
-        pool1,
+        pool_1_dropout,
         filters=10,
         kernel_size=FILTER_SHAPE2,
         padding='VALID',
         activation=tf.nn.relu)
+    conv_2_dropout = tf.nn.dropout(conv2, rate = drop_rate)
     pool2 = tf.layers.max_pooling2d(
-        conv2,
+        conv_2_dropout,
         pool_size=POOLING_WINDOW,
         strides=POOLING_STRIDE,
         padding='SAME')
+        
+    pool_2_dropout = tf.nn.dropout(pool2, rate = drop_rate) 
    
     # print(conv2.shape)              # (?,22,1,10)   
     # print(pool2.shape)              # (?,11,1,10)   
 
-    pool2_flat = tf.squeeze(tf.reduce_max(pool2, 1), squeeze_dims=[1])       #reduce_max finds max number along an axis. Squeeze removes all dimension of size 1
+    pool2_flat = tf.squeeze(tf.reduce_max(pool_2_dropout, 1), squeeze_dims=[1])       #reduce_max finds max number along an axis. Squeeze removes all dimension of size 1
 
     # print(pool2_flat.shape)         # (?,10) 
 
@@ -188,7 +196,7 @@ def main():
   plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
     
-  plt.savefig('figures/q1.png')
+  plt.savefig('figures/q1_dropout.png')
   plt.show()
   
   sess.close()

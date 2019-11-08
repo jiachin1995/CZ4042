@@ -37,9 +37,6 @@ def char_cnn_model(x):
 
     pool1 = tf.squeeze(tf.reduce_max(pool1, 1), squeeze_dims=[1])
 
-  """implement SOFTMAX LAYER, 15 CLASSES OUTPUT """
-
-
   logits = tf.layers.dense(pool1, MAX_LABEL, activation=None)
 
   return input_layer, logits
@@ -73,15 +70,10 @@ def read_data_chars():
   y_train = y_train.values
   y_test = y_test.values
   
+  print(x_train.shape)
   
-  #print(x_train.shape)  5600,100
-  #print(y_train.shape)  5600
-  #print(x_train)
-  #print(np.amax(x_train))
   
-  """Note: No need to normalise x inputs. its one hot encoding"""
-  
-  return x_train, y_train, x_test, y_test
+  #return x_train, y_train, x_test, y_test
 
   
 def main():
@@ -107,7 +99,6 @@ def main():
   # training
   loss = []
   for e in range(no_epochs):
-    """implement batch size of 128"""
     _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
     loss.append(loss_)
 

@@ -5,7 +5,7 @@ import csv
 import pylab as plt
 
 MAX_DOCUMENT_LENGTH = 100
-FILTER_SHAPE1 = [20, 256]
+FILTER_SHAPE1 = [20, 20]
 FILTER_SHAPE2 = [20, 1]
 POOLING_WINDOW = 4
 POOLING_STRIDE = 2
@@ -20,9 +20,16 @@ seed = 10
 tf.set_random_seed(seed)
 
 def char_cnn_model(x):
+  drop_rate = 0.2
   
-  input_layer = tf.reshape(
-      tf.one_hot(x, 256), [-1, MAX_DOCUMENT_LENGTH, 256, 1])
+  """ADD EMBEDDING LAYER"""
+  word_vectors = tf.contrib.layers.embed_sequence(
+      x, vocab_size=no_words, embed_dim=20)
+
+  input_layer = tf.expand_dims(word_vectors, -1)
+
+
+  # print(input_layer.shape)     # (?,100,20,1)
 
   with tf.variable_scope('CNN_Layer1'):
     #layer 1
@@ -32,33 +39,38 @@ def char_cnn_model(x):
         kernel_size=FILTER_SHAPE1,
         padding='VALID',
         activation=tf.nn.relu)
+    conv_1_dropout = tf.nn.dropout(conv1, rate = drop_rate)
     pool1 = tf.layers.max_pooling2d(
-        conv1,
+        conv_1_dropout,
         pool_size=POOLING_WINDOW,
         strides=POOLING_STRIDE,
         padding='SAME')
 
-    # print(input_layer.shape)     # (?,100,256,1)
+    pool_1_dropout = tf.nn.dropout(pool1, rate = drop_rate)
+
     # print(conv1.shape)           # (?,81,1,10)
     # print(pool1.shape)           # (?,41,1,10)
 
     #layer2
     conv2 = tf.layers.conv2d(
-        pool1,
+        pool_1_dropout,
         filters=10,
         kernel_size=FILTER_SHAPE2,
         padding='VALID',
         activation=tf.nn.relu)
+    conv_2_dropout = tf.nn.dropout(conv2, rate = drop_rate)
     pool2 = tf.layers.max_pooling2d(
-        conv2,
+        conv_2_dropout,
         pool_size=POOLING_WINDOW,
         strides=POOLING_STRIDE,
         padding='SAME')
    
+    pool_2_dropout = tf.nn.dropout(pool2, rate = drop_rate) 
+   
     # print(conv2.shape)              # (?,22,1,10)   
     # print(pool2.shape)              # (?,11,1,10)   
 
-    pool2_flat = tf.squeeze(tf.reduce_max(pool2, 1), squeeze_dims=[1])       #reduce_max finds max number along an axis. Squeeze removes all dimension of size 1
+    pool2_flat = tf.squeeze(tf.reduce_max(pool_2_dropout, 1), squeeze_dims=[1])       #reduce_max finds max number along an axis. Squeeze removes all dimension of size 1
 
     # print(pool2_flat.shape)         # (?,10) 
 
@@ -79,7 +91,7 @@ def read_data_chars():
     reader = csv.reader(filex)
     for row in reader:
       """ERROR FOUND! should be .append(row[2]) instead of row[1]"""
-      x_train.append(row[2])           
+      x_train.append(row[2])        
       y_train.append(int(row[0]))
 
   with open('test_medium.csv', encoding='utf-8') as filex:
@@ -93,19 +105,22 @@ def read_data_chars():
   x_test = pandas.Series(x_test)
   y_test = pandas.Series(y_test)
   
-  
-  char_processor = tf.contrib.learn.preprocessing.ByteProcessor(MAX_DOCUMENT_LENGTH)
-  x_train = np.array(list(char_processor.fit_transform(x_train)))
-  x_test = np.array(list(char_processor.transform(x_test)))
+  #changed char to vocab processor.
+  vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH)
+  x_train = np.array(list(vocab_processor.fit_transform(x_train)))
+  x_test = np.array(list(vocab_processor.transform(x_test)))
   y_train = y_train.values
   y_test = y_test.values
   
   
-  # print(x_train.shape)  # 5600,100
-  # print(y_train.shape)  # 5600
+  #print(x_train.shape)  5600,100
+  #print(y_train.shape)  5600
   
   # print(x_train)            
-  # print(np.amax(x_train))   #239
+  # print(np.amax(x_train))       #38657
+  global no_words
+  no_words = len(vocab_processor.vocabulary_)
+  # print(no_words)               #38658
   
   # print(y_test)         
   # print(y_test.shape) # (700,)
@@ -188,7 +203,7 @@ def main():
   plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
     
-  plt.savefig('figures/q1.png')
+  plt.savefig('figures/q2_dropout.png')
   plt.show()
   
   sess.close()
