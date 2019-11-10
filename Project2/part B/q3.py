@@ -52,22 +52,18 @@ def read_data_chars():
   x_test = pandas.Series(x_test)
   y_test = pandas.Series(y_test)
   
-  #changed char to vocab processor.
-  vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH)
-  x_train = np.array(list(vocab_processor.fit_transform(x_train)))
-  x_test = np.array(list(vocab_processor.transform(x_test)))
+  char_processor = tf.contrib.learn.preprocessing.ByteProcessor(MAX_DOCUMENT_LENGTH)
+  x_train = np.array(list(char_processor.fit_transform(x_train)))
+  x_test = np.array(list(char_processor.transform(x_test)))
   y_train = y_train.values
   y_test = y_test.values
   
   
-  #print(x_train.shape)  5600,100
-  #print(y_train.shape)  5600
+  # print(x_train.shape)  # 5600,100
+  # print(y_train.shape)  # 5600
   
   # print(x_train)            
-  # print(np.amax(x_train))       #38657
-  global no_words
-  no_words = len(vocab_processor.vocabulary_)
-  # print(no_words)               #38658
+  # print(np.amax(x_train))   #239
   
   # print(y_test)         
   # print(y_test.shape) # (700,)

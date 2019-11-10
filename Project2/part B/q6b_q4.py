@@ -7,6 +7,7 @@ import pylab as plt
 MAX_DOCUMENT_LENGTH = 100
 HIDDEN_SIZE = 20
 MAX_LABEL = 15
+EMBEDDING_SIZE = 20
 
 batch_size = 128
 no_epochs = 100
@@ -17,14 +18,19 @@ seed = 10
 tf.set_random_seed(seed)
 
 def rnn_model(x):
-  input_layer = tf.reshape(
-      tf.one_hot(x, 256), [-1, MAX_DOCUMENT_LENGTH, 256])
-  char_list = tf.unstack(input_layer, axis=1)
+
+  word_vectors = tf.contrib.layers.embed_sequence(
+      x, vocab_size=no_words, embed_dim=EMBEDDING_SIZE)
+  # print(word_vectors.shape) # (?,100,20)
+
+  word_list = tf.unstack(word_vectors, axis=1)
 
   cell = tf.nn.rnn_cell.GRUCell(HIDDEN_SIZE)
-  _, encoding = tf.nn.static_rnn(cell, char_list, dtype=tf.float32)
+  _, layer1 = tf.nn.static_rnn(cell, word_list, dtype=tf.float32)
 
-  logits = tf.layers.dense(encoding, MAX_LABEL, activation=None)
+  _, layer2 = tf.nn.static_rnn(cell, layer1, dtype=tf.float32)
+
+  logits = tf.layers.dense(layer2, MAX_LABEL, activation=None)
 
   return logits
 
@@ -52,18 +58,22 @@ def read_data_chars():
   x_test = pandas.Series(x_test)
   y_test = pandas.Series(y_test)
   
-  char_processor = tf.contrib.learn.preprocessing.ByteProcessor(MAX_DOCUMENT_LENGTH)
-  x_train = np.array(list(char_processor.fit_transform(x_train)))
-  x_test = np.array(list(char_processor.transform(x_test)))
+  #changed char to vocab processor.
+  vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH)
+  x_train = np.array(list(vocab_processor.fit_transform(x_train)))
+  x_test = np.array(list(vocab_processor.transform(x_test)))
   y_train = y_train.values
   y_test = y_test.values
   
   
-  # print(x_train.shape)  # 5600,100
-  # print(y_train.shape)  # 5600
+  #print(x_train.shape)  5600,100
+  #print(y_train.shape)  5600
   
   # print(x_train)            
-  # print(np.amax(x_train))   #239
+  # print(np.amax(x_train))       #38657
+  global no_words
+  no_words = len(vocab_processor.vocabulary_)
+  # print(no_words)               #38658
   
   # print(y_test)         
   # print(y_test.shape) # (700,)
@@ -90,18 +100,7 @@ def main():
   # Optimizer
   labels = tf.one_hot(y_, MAX_LABEL)
   entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=labels, logits=logits))
-  train_op = tf.train.AdamOptimizer(lr)
-
-
-  # set gradient clipping
-  clip_threshold = 2.0
-  
-  gradients, variables = zip(*train_op.compute_gradients(entropy))
-  gradients_clip, _ = tf.clip_by_global_norm(gradients, clip_threshold)
-  train_op = train_op.apply_gradients(zip(gradients_clip, variables))
-
-
-
+  train_op = tf.train.AdamOptimizer(lr).minimize(entropy)
 
   #accuracy
   correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1)), tf.float32)
@@ -157,7 +156,7 @@ def main():
   plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
     
-  plt.savefig('figures/q6c_q3clipping.png')
+  plt.savefig('figures/q6b_q4.png')
   plt.show()
   
   sess.close()
