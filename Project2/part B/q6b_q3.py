@@ -7,7 +7,6 @@ import pylab as plt
 MAX_DOCUMENT_LENGTH = 100
 HIDDEN_SIZE = 20
 MAX_LABEL = 15
-EMBEDDING_SIZE = 20
 
 batch_size = 128
 no_epochs = 100
@@ -17,13 +16,10 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 seed = 10
 tf.set_random_seed(seed)
 
-
 def rnn_model(x):
-  word_vectors = tf.contrib.layers.embed_sequence(
-      x, vocab_size=no_words, embed_dim=EMBEDDING_SIZE)
-  # print(word_vectors.shape) # (?,100,20)
-
-  word_list = tf.unstack(word_vectors, axis=1)
+  input_layer = tf.reshape(
+      tf.one_hot(x, 256), [-1, MAX_DOCUMENT_LENGTH, 256])
+  char_list = tf.unstack(input_layer, axis=1)
 
   cells = [
     tf.nn.rnn_cell.GRUCell(HIDDEN_SIZE),
@@ -31,13 +27,14 @@ def rnn_model(x):
   ]
   stacked_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(cells)
 
-  _, finalstate = tf.nn.static_rnn(stacked_rnn_cell, word_list, dtype=tf.float32)
+  _, finalstate = tf.nn.static_rnn(stacked_rnn_cell, char_list, dtype=tf.float32)
 
   #print(finalstate)  #2 outputs, 1 for each rnn cell layer
 
   logits = tf.layers.dense(finalstate[-1], MAX_LABEL, activation=None)
 
   return logits
+
 
 
 def read_data_chars():
@@ -62,22 +59,18 @@ def read_data_chars():
   x_test = pandas.Series(x_test)
   y_test = pandas.Series(y_test)
   
-  #changed char to vocab processor.
-  vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(MAX_DOCUMENT_LENGTH)
-  x_train = np.array(list(vocab_processor.fit_transform(x_train)))
-  x_test = np.array(list(vocab_processor.transform(x_test)))
+  char_processor = tf.contrib.learn.preprocessing.ByteProcessor(MAX_DOCUMENT_LENGTH)
+  x_train = np.array(list(char_processor.fit_transform(x_train)))
+  x_test = np.array(list(char_processor.transform(x_test)))
   y_train = y_train.values
   y_test = y_test.values
   
   
-  #print(x_train.shape)  5600,100
-  #print(y_train.shape)  5600
+  # print(x_train.shape)  # 5600,100
+  # print(y_train.shape)  # 5600
   
   # print(x_train)            
-  # print(np.amax(x_train))       #38657
-  global no_words
-  no_words = len(vocab_processor.vocabulary_)
-  # print(no_words)               #38658
+  # print(np.amax(x_train))   #239
   
   # print(y_test)         
   # print(y_test.shape) # (700,)
@@ -89,6 +82,7 @@ def read_data_chars():
 
   
 def main():
+  
   x_train, y_train, x_test, y_test = read_data_chars()
 
   # print(len(x_train))   #5600
@@ -159,7 +153,7 @@ def main():
   plt.legend(['test accuracy', 'train loss'], loc='upper left')
 
     
-  plt.savefig('figures/q6b_q4.png')
+  plt.savefig('figures/q6b_q3.png')
   plt.show()
   
   sess.close()
